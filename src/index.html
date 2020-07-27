@@ -1,13 +1,82 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <title>App1</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
 </head>
+
 <body>
+  <script type="text/javascript">
+    google.charts.load("current", { packages: ["corechart"] });
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart(countryName = "Egipto") {
+      fetch(
+        "http://localhost:9000/query/query10/" +
+        countryName
+      )
+        .then((res) => res.json())
+        .then((res) => {
+          let cases = [];
+          if (res.length !== 0) {
+
+            res.forEach((day) => {
+              cases.push([day.fecha.slice(0, 10), day.cantidad]);
+            });
+
+            var data = google.visualization.arrayToDataTable([
+              ["Date", "Cases"],
+              ...cases
+            ]);
+
+            var options = {
+              title: "Numero de casos",
+              legend: { position: "bottom" }
+            };
+
+            var chart = new google.visualization.LineChart(
+              document.querySelector(".country-chart")
+            );
+
+            chart.draw(data, options);
+          } else {
+            document.querySelector(".country-chart").innerHTML = "No data";
+          }
+        });
+    }
+
+    window.onload = function () {
+      const select = document.getElementById("country");
+      fetch("http://localhost:9000/query/paises")
+        .then((res) => res.json())
+        .then((data) => {
+          data.forEach((d) => {
+            select.innerHTML += `<option value="${d.pais}">${d.pais}</option>`;
+          });
+          select.value = "Egipto";
+        });
+    
+      select.addEventListener("change", () => {
+        document.querySelector(".country-chart").innerHTML = "";
+        drawChart(select.value);
+      });
+    };
+    
+  </script>
+
+  <h3 class="heading">Continente Africano</h3>
+  <h3 class="heading">País Específico</h3>
+  <div class="select">
+    <select id="country"></select>
+  </div>
+  <div class="country-chart"></div>
+
   <app-root></app-root>
 </body>
+
 </html>
